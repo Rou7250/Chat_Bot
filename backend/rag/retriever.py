@@ -1,5 +1,4 @@
 import faiss, pickle, numpy as np, os
-from sentence_transformers import SentenceTransformer
 
 MODEL = None
 STORE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "store")
@@ -7,6 +6,7 @@ STORE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "store")
 def get_model():
     global MODEL
     if MODEL is None:
+        from sentence_transformers import SentenceTransformer
         MODEL = SentenceTransformer("all-MiniLM-L6-v2")
     return MODEL
 

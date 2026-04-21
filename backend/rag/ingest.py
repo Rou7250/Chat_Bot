@@ -3,7 +3,6 @@ import faiss
 import pickle
 import numpy as np
 import pdfplumber
-from sentence_transformers import SentenceTransformer
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 MODEL = None
@@ -12,6 +11,7 @@ STORE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "store")
 def get_model():
     global MODEL
     if MODEL is None:
+        from sentence_transformers import SentenceTransformer
         MODEL = SentenceTransformer("all-MiniLM-L6-v2")
     return MODEL
 
