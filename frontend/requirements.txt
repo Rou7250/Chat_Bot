@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+streamlit
+pdfplumber
+sentence-transformers
+faiss-cpu
+langchain
+langchain-text-splitters
+google-generativeai
+python-dotenv
+python-multipart
+requests
+numpy
+pydantic
+tenacity
