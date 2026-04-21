@@ -13,3 +13,4 @@ requests
 numpy
 pydantic
 tenacity
+groq
