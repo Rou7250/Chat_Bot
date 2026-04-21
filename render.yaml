@@ -2,6 +2,7 @@ services:
   - type: web
     name: hybrid-rag-backend
     env: python
+    plan: free
     region: ohio
     rootDir: backend
     buildCommand: pip install -r requirements.txt
