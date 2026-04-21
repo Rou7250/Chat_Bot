@@ -8,9 +8,13 @@ load_dotenv(override=True)
 
 api_key = os.environ.get("GROQ_API_KEY")
 if not api_key:
-    raise RuntimeError("Missing GROQ_API_KEY in environment.")
+    print("==========================================================")
+    print("CRITICAL WARNING: GROQ_API_KEY is missing in Render Environment!")
+    print("==========================================================")
+    client = None
+else:
+    client = Groq(api_key=api_key)
 
-client = Groq(api_key=api_key)
 MODEL_NAME = "llama-3.3-70b-versatile"
 
 _RAG_PROMPT = (
