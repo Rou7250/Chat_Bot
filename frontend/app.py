@@ -1,8 +1,9 @@
 import streamlit as st
 import requests
+import os
 from utils.chat_storage import load_all_chats, save_chat, generate_chat_id, clear_all_chats
 
-API = "http://localhost:8000"
+API = os.getenv("BACKEND_API_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="Hybrid RAG Chatbot v2", page_icon="🧠", layout="wide")
 
