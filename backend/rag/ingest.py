@@ -6,8 +6,14 @@ import pdfplumber
 from sentence_transformers import SentenceTransformer
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+MODEL = None
 STORE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "store")
+
+def get_model():
+    global MODEL
+    if MODEL is None:
+        MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+    return MODEL
 
 def ingest_document(file_obj, ext):
     os.makedirs(STORE, exist_ok=True)
@@ -30,7 +36,8 @@ def ingest_document(file_obj, ext):
     if not chunks:
         return 0
         
-    vecs = MODEL.encode(chunks).astype(np.float32)
+    model = get_model()
+    vecs = model.encode(chunks).astype(np.float32)
     
     index = faiss.IndexFlatL2(vecs.shape[1])
     index.add(vecs)
