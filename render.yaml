@@ -1,10 +1,30 @@
 services:
   - type: web
-    name: hybrid-rag-backend
+    name: chat-bot-backend
     env: python
     plan: free
     region: ohio
     rootDir: backend
     healthCheckPath: /health
     buildCommand: pip install -r requirements.txt
-    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port 10000
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+
+  - type: web
+    name: chat-bot-frontend
+    env: python
+    plan: free
+    region: ohio
+    rootDir: frontend
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: BACKEND_API_URL
+        fromService:
+          type: web
+          name: chat-bot-backend
+          envVarKey: RENDER_EXTERNAL_URL
