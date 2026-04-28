@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: chat-bot-backend
+    name: chat-bot-api
     env: python
     plan: free
     region: ohio
@@ -26,7 +26,7 @@ services:
       - key: BACKEND_API_URL
         fromService:
           type: web
-          name: chat-bot-backend
+          name: chat-bot-api
           envVarKey: RENDER_EXTERNAL_URL
 
 # Dummy comment to trigger Render blueprint sync!
