@@ -174,13 +174,22 @@ if user_input:
             try:
                 with st.spinner("Thinking..."):
                     history_payload = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages[-5:] if m["role"] in ("user", "assistant")]
-                    res = requests.post(
-                        f"{API}/chat",
-                        json={"query": query, "mode": "auto", "debug": False, "history": history_payload},
-                        timeout=45,
-                        stream=True
-                    )
-                    res.raise_for_status()
+                    
+                    import time
+                    max_retries = 4
+                    for attempt in range(max_retries):
+                        res = requests.post(
+                            f"{API}/chat",
+                            json={"query": query, "mode": "auto", "debug": False, "history": history_payload},
+                            timeout=45,
+                            stream=True
+                        )
+                        if res.status_code == 429 and attempt < max_retries - 1:
+                            time.sleep(1.5 ** attempt) # wait 1s, 1.5s, 2.25s
+                            continue
+                        
+                        res.raise_for_status()
+                        break
                     
                 def generate():
                     for chunk in res.iter_content(chunk_size=1024, decode_unicode=True):
