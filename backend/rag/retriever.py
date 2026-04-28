@@ -1,40 +1,56 @@
-import faiss, pickle, numpy as np, os
+import pickle
+import os
+from rank_bm25 import BM25Okapi
 
-MODEL = None
 STORE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "store")
 
-def get_model():
-    global MODEL
-    if MODEL is None:
-        from sentence_transformers import SentenceTransformer
-        MODEL = SentenceTransformer("all-MiniLM-L6-v2")
-    return MODEL
-
-def _search(vec: np.ndarray, k: int):
-    idx_path = f"{STORE}/faiss.index"
-    if not os.path.exists(idx_path):
-        return [], []
-    index = faiss.read_index(idx_path)
-    with open(f"{STORE}/meta.pkl", "rb") as f:
-        chunks = pickle.load(f)
-    distances, I = index.search(vec, min(k, len(chunks)))
-    return [chunks[i] for i in I[0] if i < len(chunks)], distances[0].tolist()
+def _get_bm25_and_chunks():
+    meta_path = os.path.join(STORE, "meta.pkl")
+    if not os.path.exists(meta_path):
+        return None, []
+    try:
+        with open(meta_path, "rb") as f:
+            chunks = pickle.load(f)
+        if not chunks:
+            return None, []
+        tokenized_corpus = [chunk.lower().split() for chunk in chunks]
+        bm25 = BM25Okapi(tokenized_corpus)
+        return bm25, chunks
+    except Exception:
+        return None, []
 
 def retrieve(query: str, k: int = 4) -> tuple[str, list[str], list[float]]:
-    model = get_model()
-    vec = model.encode([query]).astype(np.float32)
-    chunks, scores = _search(vec, k)
-    return "\n\n".join(chunks), chunks, scores
+    bm25, chunks = _get_bm25_and_chunks()
+    if not bm25 or not chunks:
+        return "", [], []
+    
+    tokenized_query = query.lower().split()
+    scores = bm25.get_scores(tokenized_query).tolist()
+    
+    # Get top k indices
+    top_k_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:k]
+    
+    top_chunks = [chunks[i] for i in top_k_indices]
+    top_scores = [scores[i] for i in top_k_indices]
+    
+    return "\n\n".join(top_chunks), top_chunks, top_scores
 
 def retrieve_multi(queries: list[str], k: int = 3) -> tuple[str, list[str]]:
-    model = get_model()
+    bm25, chunks = _get_bm25_and_chunks()
+    if not bm25 or not chunks:
+        return "", []
+        
     seen, merged = set(), []
     for q in queries:
-        vec = model.encode([q]).astype(np.float32)
-        chunks, _ = _search(vec, k)
-        for c in chunks:
+        tokenized_query = q.lower().split()
+        scores = bm25.get_scores(tokenized_query).tolist()
+        top_k_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:k]
+        
+        for i in top_k_indices:
+            c = chunks[i]
             key = c[:80]
             if key not in seen:
                 seen.add(key)
                 merged.append(c)
+                
     return "\n\n".join(merged), merged

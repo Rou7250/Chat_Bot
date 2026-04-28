@@ -1,19 +1,9 @@
 import os
-import faiss
 import pickle
-import numpy as np
 import pdfplumber
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-MODEL = None
 STORE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "store")
-
-def get_model():
-    global MODEL
-    if MODEL is None:
-        from sentence_transformers import SentenceTransformer
-        MODEL = SentenceTransformer("all-MiniLM-L6-v2")
-    return MODEL
 
 def ingest_document(file_obj, ext):
     os.makedirs(STORE, exist_ok=True)
@@ -36,14 +26,19 @@ def ingest_document(file_obj, ext):
     if not chunks:
         return 0
         
-    model = get_model()
-    vecs = model.encode(chunks).astype(np.float32)
+    # Append to existing chunks if any
+    existing_chunks = []
+    meta_path = os.path.join(STORE, "meta.pkl")
+    if os.path.exists(meta_path):
+        try:
+            with open(meta_path, "rb") as f:
+                existing_chunks = pickle.load(f)
+        except Exception:
+            pass
+            
+    all_chunks = existing_chunks + chunks
     
-    index = faiss.IndexFlatL2(vecs.shape[1])
-    index.add(vecs)
-    
-    faiss.write_index(index, f"{STORE}/faiss.index")
-    with open(f"{STORE}/meta.pkl", "wb") as f:
-        pickle.dump(chunks, f)
+    with open(meta_path, "wb") as f:
+        pickle.dump(all_chunks, f)
         
     return len(chunks)
