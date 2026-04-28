@@ -28,3 +28,5 @@ services:
           type: web
           name: chat-bot-backend
           envVarKey: RENDER_EXTERNAL_URL
+
+# Dummy comment to trigger Render blueprint sync!
