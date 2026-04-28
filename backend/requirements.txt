@@ -1,6 +1,5 @@
 fastapi
 uvicorn[standard]
-streamlit
 pdfplumber
 sentence-transformers
 faiss-cpu
